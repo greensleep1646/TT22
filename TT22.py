@@ -1,25 +1,29 @@
 import requests
+from bs4 import BeautifulSoup
 
-def tiktok_adres_bul(kullanici_adi):
-    # TikTok API'sine istek yap
-    url = f"https://api.tiktok.com/api/user/detail/?uniqueId={kullanici_adi}"
+def tiktok_ev_adresi_bul(username):
+    url = f"https://www.tiktok.com/@{username}"
     response = requests.get(url)
-    
-    # Yanıtı kontrol et
     if response.status_code == 200:
-        veri = response.json()
-        if 'userInfo' in veri:
-            kullanici_bilgisi = veri['userInfo']
-            if 'city' in kullanici_bilgisi and 'country' in kullanici_bilgisi:
-                adres = kullanici_bilgisi['city'] + ", " + kullanici_bilgisi['country']
-                print("Kullanıcının adresi:", adres)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        user_info = soup.find('div', class_='share-sub-title')
+        if user_info:
+            user_id = user_info['data-user-id']
+            address_url = f"https://www.tiktok.com/node/share/user/@{user_id}?lang=en"
+            address_response = requests.get(address_url)
+            if address_response.status_code == 200:
+                address_data = address_response.json()
+                if 'address' in address_data:
+                    ev_adresi = address_data['address']
+                    print(f"{username} adlı kullanıcının ev adresi: {ev_adresi}")
+                else:
+                    print(f"{username} adlı kullanıcının ev adresi bulunamadı.")
             else:
-                print("Kullanıcının adresi bulunamadı.")
+                print("Adres bilgisine ulaşırken bir hata oluştu.")
         else:
-            print("Kullanıcı bilgileri alınamadı.")
+            print("Kullanıcı bilgileri bulunamadı.")
     else:
-        print("TikTok API'ye bağlanırken bir hata oluştu.")
+        print("Kullanıcı profili bulunamadı.")
 
-# Kullanıcı adını buraya gir
-tiktok_kullanici_adi = input("TikTok kullanıcı adını gir: ")
-tiktok_adres_bul(tiktok_kullanici_adi)
+# Kullanıcı adını gir ve işini bitir.
+tiktok_ev_adresi_bul("kullanıcı_adı")
