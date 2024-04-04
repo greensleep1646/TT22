@@ -1,38 +1,25 @@
 import requests
-from bs4 import BeautifulSoup
 
-def tiktok_ev_adresi_bul(username):
-    # TikTok profil URL'sini oluştur
-    url = f"https://www.tiktok.com/@{username}"
-
-    # URL'yi getir
+def tiktok_adres_bul(kullanici_adi):
+    # TikTok API'sine istek yap
+    url = f"https://api.tiktok.com/api/user/detail/?uniqueId={kullanici_adi}"
     response = requests.get(url)
-
-    # Hedefin TikTok sayfasını kontrol et
+    
+    # Yanıtı kontrol et
     if response.status_code == 200:
-        # BeautifulSoup kullanarak sayfayı analiz et
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Profil sayfasında metin içeriğini ara
-        profile_info = soup.find('meta', attrs={'property': 'og:description'})
-
-        # Profil bilgisini al
-        profile_content = profile_info['content']
-
-        # Adresi içeren kısımları bul
-        adresler = [i for i in profile_content.split() if i.startswith("Adres:")]
-
-        if adresler:
-            # Eğer adres varsa, ilk adresi döndür
-            return adresler[0][7:]
+        veri = response.json()
+        if 'userInfo' in veri:
+            kullanici_bilgisi = veri['userInfo']
+            if 'city' in kullanici_bilgisi and 'country' in kullanici_bilgisi:
+                adres = kullanici_bilgisi['city'] + ", " + kullanici_bilgisi['country']
+                print("Kullanıcının adresi:", adres)
+            else:
+                print("Kullanıcının adresi bulunamadı.")
         else:
-            return "Üzgünüm, adres bulunamadı. Ya da senin yeteneksizliğini mi sorgulayayım?"
-
+            print("Kullanıcı bilgileri alınamadı.")
     else:
-        return "Hedefin TikTok profili bulunamadı. Daha iyi bir hedef seçmelisin."
+        print("TikTok API'ye bağlanırken bir hata oluştu.")
 
-# Kullanıcı adını gir
-username = input("TikTok kullanıcı adını gir: ")
-
-# Fonksiyonu çağır ve sonucu yazdır
-print(tiktok_ev_adresi_bul(username))
+# Kullanıcı adını buraya gir
+tiktok_kullanici_adi = input("TikTok kullanıcı adını gir: ")
+tiktok_adres_bul(tiktok_kullanici_adi)
